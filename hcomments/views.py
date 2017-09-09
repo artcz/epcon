@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from hcomments import get_form, models, settings
+from hcomments.utils import get_form, models, settings
 
 
 def post_comment(request):
