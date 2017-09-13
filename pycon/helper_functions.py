@@ -5,6 +5,8 @@ Module temporarily created on 2017-09-12 for all the functions that used to be
 defined inside settings.py
 """
 
+from django.conf import settings
+
 
 def CONFERENCE_TICKETS(conf, ticket_type=None, fare_code=None):
     from p3 import models
@@ -42,7 +44,7 @@ def CONFERENCE_VOTING_OPENED(conf, user):
         from p3.models import TalkSpeaker, Speaker
         try:
             count = TalkSpeaker.objects.filter(
-                talk__conference=CONFERENCE_CONFERENCE,
+                talk__conference=settings.CONFERENCE_CONFERENCE,
                 speaker=user.speaker).count()
         except (AttributeError, Speaker.DoesNotExist):
             pass
@@ -55,6 +57,7 @@ def CONFERENCE_VOTING_OPENED(conf, user):
             return True
 
     return False
+
 
 def CONFERENCE_VOTING_ALLOWED(user):
 
@@ -70,7 +73,7 @@ def CONFERENCE_VOTING_ALLOWED(user):
     from p3.models import TalkSpeaker, Speaker
     try:
         count = TalkSpeaker.objects.filter(
-            talk__conference=CONFERENCE_CONFERENCE,
+            talk__conference=settings.CONFERENCE_CONFERENCE,
             speaker=user.speaker).count()
     except Speaker.DoesNotExist:
         pass
@@ -83,18 +86,19 @@ def CONFERENCE_VOTING_ALLOWED(user):
     from p3 import models
     # Starting with EP2017, we allow people who have bought tickets in the
     # past, to also past to participate in talk voting.
-    tickets = models.TicketConference.objects \
-              .filter(ticket__fare__conference__in=CONFERENCE_TALK_VOTING_ELIGIBLE,
-                      assigned_to=user.email)
-                      
+    tickets = models.TicketConference.objects.filter(
+        ticket__fare__conference__in=settings.CONFERENCE_TALK_VOTING_ELIGIBLE,
+        assigned_to=user.email
+    )
+
     # Starting with EP2017, we know that all assigned tickets have
     # .assigned_to set correctly
-    #tickets = models.TicketConference.objects \
+    # tickets = models.TicketConference.objects \
     #          .filter(ticket__fare__conference=CONFERENCE_CONFERENCE,
     #                  assigned_to=user.email)
 
     # Old query:
-    #from django.db.models import Q
+    # from django.db.models import Q
     # tickets = models.TicketConference.objects \
     #     .available(user, CONFERENCE_CONFERENCE) \
     #     .filter(Q(orderitem__order___complete=True) | Q(
@@ -102,6 +106,7 @@ def CONFERENCE_VOTING_ALLOWED(user):
     #     .filter(Q(p3_conference=None) | Q(p3_conference__assigned_to='') | Q(
     #     p3_conference__assigned_to=user.email))
     return tickets.count() > 0
+
 
 def CONFERENCE_SCHEDULE_ATTENDEES(schedule, forecast):
     from p3.stats import presence_days
@@ -124,6 +129,7 @@ def CONFERENCE_SCHEDULE_ATTENDEES(schedule, forecast):
 
 ######
 
+
 def CONFERENCE_VIDEO_COVER_EVENTS(conference):
     from conference import dataaccess
     from conference import models
@@ -141,11 +147,13 @@ def CONFERENCE_VIDEO_COVER_EVENTS(conference):
         if e['time'].hour >= 20:
             return False
         if len(e['tracks']) == 1 and (
-            e['tracks'][0] in ('helpdesk1', 'helpdesk2')):
+            e['tracks'][0] in ('helpdesk1', 'helpdesk2')
+        ):
             return False
         return True
 
     return [x['id'] for x in filter(valid, dataaccess.events(conf=conference))]
+
 
 def CONFERENCE_VIDEO_COVER_IMAGE(eid, type='front', thumb=False):
     import re
@@ -190,8 +198,9 @@ def CONFERENCE_VIDEO_COVER_IMAGE(eid, type='front', thumb=False):
         return lines
 
     if conference in ('ep2012', 'ep2013', 'ep2015', 'ep2016', 'ep2017'):
-        master = Image.open(os.path.join(stuff, 'cover-start-end.png')).convert(
-            'RGBA')
+        master = Image.open(
+            os.path.join(stuff, 'cover-start-end.png')
+        ).convert('RGBA')
 
         if type == 'back':
             return master
@@ -244,14 +253,16 @@ def CONFERENCE_VIDEO_COVER_IMAGE(eid, type='front', thumb=False):
 
 ######
 
+
 def CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION(tickets):
     from p3.utils import conference_ticket_badge
 
     return conference_ticket_badge(tickets)
 
+
 def CONFERENCE_TALK_VIDEO_ACCESS(request, talk):
     return True
-    if talk.conference != CONFERENCE_CONFERENCE:
+    if talk.conference != settings.CONFERENCE_CONFERENCE:
         return True
     u = request.user
     if u.is_anonymous():
@@ -264,6 +275,7 @@ def CONFERENCE_TALK_VIDEO_ACCESS(request, talk):
                 fare__ticket_type='conference')
     return qs.exists()
 
+
 def ASSOPY_ORDERITEM_CAN_BE_REFUNDED(user, item):
     if user.is_superuser:
         return True
@@ -273,13 +285,14 @@ def ASSOPY_ORDERITEM_CAN_BE_REFUNDED(user, item):
     ticket = item.ticket
     if ticket.user != user:
         return False
-    if ticket.fare.conference != CONFERENCE_CONFERENCE:
+    if ticket.fare.conference != settings.CONFERENCE_CONFERENCE:
         return False
     if item.order.total() == 0:
         return False
     return item.order._complete
 
 #######
+
 
 def HCOMMENTS_RECAPTCHA(request):
     return not request.user.is_authenticated()
@@ -304,9 +317,10 @@ def HCOMMENTS_MODERATOR_REQUEST(request, comment):
 
 #######
 
+
 def P3_LIVE_REDIRECT_URL(request, track):
     internal = False
-    for check in P3_LIVE_INTERNAL_IPS:
+    for check in settings.P3_LIVE_INTERNAL_IPS:
         if request.META['REMOTE_ADDR'].startswith(check):
             internal = True
             break
@@ -316,8 +330,10 @@ def P3_LIVE_REDIRECT_URL(request, track):
 
         ua = request.META['HTTP_USER_AGENT']
 
-        base = '{0}/{1}'.format(P3_INTERNAL_SERVER,
-                                P3_LIVE_TRACKS[track]['stream']['internal'])
+        base = '{0}/{1}'.format(
+            settings.P3_INTERNAL_SERVER,
+            settings.P3_LIVE_TRACKS[track]['stream']['internal']
+        )
         if re.search('Android', ua, re.I):
             url = 'rtsp://' + base
         elif re.search('iPhone|iPad|iPod', ua, re.I):
@@ -327,7 +343,8 @@ def P3_LIVE_REDIRECT_URL(request, track):
     else:
         try:
             url = 'https://www.youtube.com/watch?v={0}'.format(
-                P3_LIVE_TRACKS[track]['stream']['external'])
+                settings.P3_LIVE_TRACKS[track]['stream']['external']
+            )
         except KeyError:
             pass
     return url
@@ -347,15 +364,18 @@ def P3_LIVE_EMBED(request, track=None, event=None):
             track = event['tracks'][0]
 
     internal = False
-    for check in P3_LIVE_INTERNAL_IPS:
+
+    for check in settings.P3_LIVE_INTERNAL_IPS:
         if request.META['REMOTE_ADDR'].startswith(check):
             internal = True
             break
 
     if internal:
         try:
-            url = '{0}/{1}'.format(P3_INTERNAL_SERVER,
-                                   P3_LIVE_TRACKS[track]['stream']['internal'])
+            url = '{0}/{1}'.format(
+                settings.P3_INTERNAL_SERVER,
+                settings.P3_LIVE_TRACKS[track]['stream']['internal']
+            )
         except KeyError:
             return None
         data = {
@@ -363,6 +383,7 @@ def P3_LIVE_EMBED(request, track=None, event=None):
             'stream': url.rsplit('/', 1)[1],
             'url': url,
         }
+        # TODO: move that to a template file
         html = ("""
         <div>
             <div class="button" style="float: left; margin-right: 20px;">
@@ -405,7 +426,7 @@ def P3_LIVE_EMBED(request, track=None, event=None):
                 }
             </script>
         </div>
-        """ % data) #" (makes emacs highlighting happy)
+        """ % data)  # " (makes emacs highlighting happy)
         return html
     else:
         data = cache.get('p3_live_embed_%s' % track)
@@ -414,11 +435,13 @@ def P3_LIVE_EMBED(request, track=None, event=None):
 
         try:
             yurl = 'https://www.youtube.com/watch?v={0}'.format(
-                P3_LIVE_TRACKS[track]['stream']['external'])
+                settings.P3_LIVE_TRACKS[track]['stream']['external']
+            )
         except KeyError:
             return None
 
-        import httplib2, json
+        import httplib2
+        import json
 
         http = httplib2.Http()
         service = 'https://www.youtube.com/oembed'
@@ -431,12 +454,10 @@ def P3_LIVE_EMBED(request, track=None, event=None):
         cache.set('p3_live_embed_%s' % track, data['html'], 3600)
         return data['html']
 
-# cronjob
 
+# cronjob
 def cron_cleanup():
     from django.core.management.commands import cleanup
 
     cmd = cleanup.Command()
     cmd.handle()
-
-

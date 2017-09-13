@@ -4,14 +4,19 @@ import os
 import os.path
 import sys
 
+import django
+
+from distutils.version import StrictVersion
+
+
 # Configure DEBUG settings
 if os.environ.get('DEBUG') == 'True':
     DEBUG = True
 else:
     DEBUG = False
-    
+
 # For development, we always run in debug mode...
-#DEBUG=True
+# DEBUG=True
 
 # We want to use HTTPS for everything and not fiddle with docker or gunicorn
 # setups.
@@ -36,11 +41,9 @@ else:
         del os.environ['HTTPS']
     HTTPS = False
 
-import django
 
-from distutils.version import StrictVersion
 
-#from django.utils.translation import ugettext as _
+# from django.utils.translation import ugettext as _
 _ = lambda x:x
 
 LESS_THAN_18 = StrictVersion(django.get_version()) < StrictVersion('1.8')
