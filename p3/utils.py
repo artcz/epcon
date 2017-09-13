@@ -11,6 +11,7 @@ from assopy import utils as autils
 from p3 import models as p3models
 from assopy import models as assopy_models
 from conference import models as cmodels
+from pycon.helper_functions import CONFERENCE_TICKETS
 
 from django.contrib.auth.decorators import user_passes_test
 
@@ -152,7 +153,7 @@ def spam_recruiter_by_conf(conf):
     contacted via email for the purpose of recruiting."""
     from django.contrib.auth.models import User
 
-    tickets = settings.CONFERENCE_TICKETS(conf, ticket_type='conference')
+    tickets = CONFERENCE_TICKETS(conf, ticket_type='conference')
     owned = tickets.filter(p3_conference__assigned_to='')
     assigned = tickets.exclude(p3_conference__assigned_to='')
 

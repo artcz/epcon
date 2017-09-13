@@ -3,6 +3,8 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext as _
 
+from pycon import helper_functions
+
 try:
     CONFERENCE = settings.CONFERENCE_CONFERENCE
 except AttributeError:
@@ -39,10 +41,10 @@ CFP_CLOSED = getattr(settings, 'CONFERENCE_CFP_CLOSED', None)
 
 VOTING_CLOSED = getattr(settings, 'CONFERENCE_VOTING_CLOSED', None)
 
-VOTING_OPENED = getattr(settings, 'CONFERENCE_VOTING_OPENED', lambda conf, user: conf.voting())
+VOTING_OPENED = getattr(helper_functions, 'CONFERENCE_VOTING_OPENED', lambda conf, user: conf.voting())
 
 # Callable to check whether the user passed may vote
-VOTING_ALLOWED = getattr(settings, 'CONFERENCE_VOTING_ALLOWED', lambda user: True)
+VOTING_ALLOWED = getattr(helper_functions, 'CONFERENCE_VOTING_ALLOWED', lambda user: True)
 
 VOTING_DISALLOWED = getattr(settings, 'CONFERENCE_VOTING_DISALLOWED', None)
 
@@ -80,7 +82,7 @@ def _CONFERENCE_TICKETS(conf, ticket_type=None, fare_code=None):
             tickets = tickets.filter(fare__code=fare_code)
     return tickets
 
-CONFERENCE_TICKETS = getattr(settings, 'CONFERENCE_TICKETS', _CONFERENCE_TICKETS)
+CONFERENCE_TICKETS = getattr(helper_functions, 'CONFERENCE_TICKETS', _CONFERENCE_TICKETS)
 # TICKET_BADGE_ENABLED enable or disable the ability to generate badge by admin
 TICKET_BADGE_ENABLED = getattr(settings, 'CONFERENCE_TICKET_BADGE_ENABLED', False)
 
@@ -122,15 +124,15 @@ TICKED_BADGE_PROG = getattr(settings, 'CONFERENCE_TICKED_BADGE_PROG',
                             os.path.join(os.path.dirname(conference.__file__), 'utils', 'ticket_badge.py'))
 TICKET_BADGE_PROG_ARGS = getattr(settings, 'CONFERENCE_TICKET_BADGE_PROG_ARGS', ['-e', '1', '-n', '6'])
 TICKET_BADGE_PROG_ARGS_ADMIN = getattr(settings, 'CONFERENCE_TICKET_BADGE_PROG_ARGS', ['-e', '0', '-p', 'A4', '-n', '2'])
-TICKET_BADGE_PREPARE_FUNCTION = getattr(settings, 'CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION', lambda tickets: [])
+TICKET_BADGE_PREPARE_FUNCTION = getattr(helper_functions, 'CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION', lambda tickets: [])
 
-SCHEDULE_ATTENDEES = getattr(settings, 'CONFERENCE_SCHEDULE_ATTENDEES', lambda schedule, forecast=False: 0)
+SCHEDULE_ATTENDEES = getattr(helper_functions, 'CONFERENCE_SCHEDULE_ATTENDEES', lambda schedule, forecast=False: 0)
 
 ADMIN_ATTENDEE_STATS = getattr(settings, 'CONFERENCE_ADMIN_ATTENDEE_STATS', ())
 
 X_SENDFILE = getattr(settings, 'CONFERENCE_X_SENDFILE', None)
 
-TALK_VIDEO_ACCESS = getattr(settings, 'CONFERENCE_TALK_VIDEO_ACCESS', lambda r, t: True)
+TALK_VIDEO_ACCESS = getattr(helper_functions, 'CONFERENCE_TALK_VIDEO_ACCESS', lambda r, t: True)
 
 TALK_SUBMISSION_LANGUAGES = getattr(
     settings,
@@ -165,12 +167,12 @@ def _VIDEO_COVER_EVENTS(conference):
     from conference import dataaccess
     return [ x['id'] for x in dataaccess.events(conf=conference) ]
 
-VIDEO_COVER_EVENTS = getattr(settings, 'CONFERENCE_VIDEO_COVER_EVENTS', _VIDEO_COVER_EVENTS)
+VIDEO_COVER_EVENTS = getattr(helper_functions, 'CONFERENCE_VIDEO_COVER_EVENTS', _VIDEO_COVER_EVENTS)
 
 def _VIDEO_COVER_IMAGE(conference, eid, type='front', thumb=False):
     return None
 
-VIDEO_COVER_IMAGE = getattr(settings, 'CONFERENCE_VIDEO_COVER_IMAGE', _VIDEO_COVER_IMAGE)
+VIDEO_COVER_IMAGE = getattr(helper_functions, 'CONFERENCE_VIDEO_COVER_IMAGE', _VIDEO_COVER_IMAGE)
 
 _OEMBED_PROVIDERS = (
     ('https://www.youtube.com/oembed',

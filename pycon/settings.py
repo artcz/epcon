@@ -632,13 +632,12 @@ CONFERENCE_TICKET_CONFERENCE_EXPERIENCES = (
     (5, _('5 stars (guru level)')),
 )
 
-from .helper_functions import (
-    CONFERENCE_TICKETS,
-    CONFERENCE_VOTING_OPENED,
-    CONFERENCE_VOTING_ALLOWED,
-    CONFERENCE_SCHEDULE_ATTENDEES,
-)
-
+# from .helper_functions import (
+#     [x] CONFERENCE_TICKETS,
+#     [x] CONFERENCE_VOTING_OPENED,
+#     [x] CONFERENCE_VOTING_ALLOWED,
+#     [x] CONFERENCE_SCHEDULE_ATTENDEES,
+# )
 
 
 CONFERENCE_ADMIN_ATTENDEE_STATS = (
@@ -652,20 +651,20 @@ CONFERENCE_ADMIN_ATTENDEE_STATS = (
     'p3.stats.pp_tickets',
 )
 
-from .helper_functions import (
-    CONFERENCE_VIDEO_COVER_EVENTS,
-    CONFERENCE_VIDEO_COVER_IMAGE,
-)
+# from .helper_functions import (
+#     [x] CONFERENCE_VIDEO_COVER_EVENTS,
+#     [x] CONFERENCE_VIDEO_COVER_IMAGE,
+# )
 
 
 CONFERENCE_TICKET_BADGE_ENABLED = True
 CONFERENCE_TICKET_BADGE_PROG_ARGS = ['-e', '0', '-p', 'A4', '-n', '1']
 
-from .helper_functions import (
-    CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION,
-    CONFERENCE_TALK_VIDEO_ACCESS,
-    ASSOPY_ORDERITEM_CAN_BE_REFUNDED,
-)
+# from .helper_functions import (
+#     [x] CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION,
+#     [x] CONFERENCE_TALK_VIDEO_ACCESS,
+#     [x] ASSOPY_ORDERITEM_CAN_BE_REFUNDED,
+# )
 
 
 #
@@ -717,11 +716,11 @@ https://ep2017.europython.eu/accounts/profile/
 '''
 
 
-from .helper_functions import (
-    HCOMMENTS_RECAPTCHA,
-    HCOMMENTS_THREAD_OWNERS,
-    HCOMMENTS_MODERATOR_REQUEST,
-)
+# from .helper_functions import (
+#     [x] HCOMMENTS_RECAPTCHA,
+#     [x] HCOMMENTS_THREAD_OWNERS,
+#     [x] HCOMMENTS_MODERATOR_REQUEST,
+# )
 
 
 P3_ANONYMOUS_AVATAR = 'p5/images/headshot-default.jpg'
@@ -778,17 +777,17 @@ P3_LIVE_TRACKS = {
     },
 }
 
-from .helper_functions import (
-    P3_LIVE_REDIRECT_URL,
-    P3_LIVE_EMBED,
-)
+# from .helper_functions import (
+#     [x] P3_LIVE_REDIRECT_URL,
+#     [x] P3_LIVE_EMBED,
+# )
 
-from .helper_functions import cron_cleanup
+# [x] from .helper_functions import cron_cleanup
 
 
 CRONTAB_COMMAND_PREFIX = 'DATA_DIR=%s OTHER_STUFF=%s' % (DATA_DIR, OTHER_STUFF)
 CRONJOBS = [
-    ('@weekly', 'pycon.settings.cron_cleanup')
+    ('@weekly', 'pycon.helper_functions.cron_cleanup')
 ]
 
 

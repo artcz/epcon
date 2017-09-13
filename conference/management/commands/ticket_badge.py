@@ -7,6 +7,8 @@ from django.db.models import Q
 
 from conference import settings
 from conference import utils
+from pycon.helper_functions import CONFERENCE_TICKETS
+
 
 class Command(BaseCommand):
     """
@@ -43,6 +45,7 @@ class Command(BaseCommand):
             help='Save the data used to generate the badegs in the given file',
         ),
     )
+
     def handle(self, *args, **options):
         try:
             conference = args[0]
@@ -50,7 +53,7 @@ class Command(BaseCommand):
             raise CommandError('conference code is missing')
 
         cmdargs = settings.TICKET_BADGE_PROG_ARGS
-        tickets = settings.CONFERENCE_TICKETS(
+        tickets = CONFERENCE_TICKETS(
             conference, ticket_type=options['type'], fare_code=options['fare'])
         if options['names']:
             q = Q()
@@ -68,4 +71,3 @@ class Command(BaseCommand):
         if options['input_data']:
             file(options['input_data'], 'w').write(input_data)
         print name, f
-

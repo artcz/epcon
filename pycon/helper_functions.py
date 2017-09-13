@@ -127,8 +127,8 @@ def CONFERENCE_SCHEDULE_ATTENDEES(schedule, forecast):
                 return row['total']
     return 0
 
-######
 
+######
 
 def CONFERENCE_VIDEO_COVER_EVENTS(conference):
     from conference import dataaccess
@@ -251,8 +251,8 @@ def CONFERENCE_VIDEO_COVER_IMAGE(eid, type='front', thumb=False):
     else:
         return None
 
-######
 
+######
 
 def CONFERENCE_TICKET_BADGE_PREPARE_FUNCTION(tickets):
     from p3.utils import conference_ticket_badge

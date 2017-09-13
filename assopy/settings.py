@@ -2,6 +2,8 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+from pycon import helper_functions
+
 if hasattr(settings, 'ASSOPY_JANRAIN'):
     JANRAIN = {
         'domain': settings.ASSOPY_JANRAIN['domain'],
@@ -177,4 +179,4 @@ WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
 def _ORDERITEM_CAN_BE_REFUNDED(user, item):
     return False
 
-ORDERITEM_CAN_BE_REFUNDED = getattr(settings, 'ASSOPY_ORDERITEM_CAN_BE_REFUNDED', _ORDERITEM_CAN_BE_REFUNDED)
+ORDERITEM_CAN_BE_REFUNDED = getattr(helper_functions, 'ASSOPY_ORDERITEM_CAN_BE_REFUNDED', _ORDERITEM_CAN_BE_REFUNDED)

@@ -10,6 +10,7 @@ from common.decorators import render_to_json
 from conference import models as cmodels
 from conference.utils import TimeTable2
 from p3 import dataaccess
+from pycon import helper_functions
 
 
 def _live_conference():
@@ -28,6 +29,7 @@ def _live_conference():
         date = datetime.date.today()
     return conf, date
 
+
 def live(request):
     """
     What's up doc?
@@ -43,14 +45,18 @@ def live(request):
     }
     return render(request, 'p3/live.html', ctx)
 
+
 def live_track(request, track):
     return render(request, 'p3/live_track.html', {})
 
+
 def live_track_video(request, track):
-    url = settings.P3_LIVE_REDIRECT_URL(request, track)
+    url = helper_functions.P3_LIVE_REDIRECT_URL(request, track)
+
     class R(http.HttpResponseRedirect):
         allowed_schemes = ['http', 'https', 'rtsp', 'rtmp']
     return R(url)
+
 
 @render_to_json
 def live_track_events(request, track):
@@ -115,7 +121,7 @@ def live_events(request):
         if event is None:
             output[track] = {
                 'id': None,
-                'embed': settings.P3_LIVE_EMBED(request, track=track),
+                'embed': helper_functions.P3_LIVE_EMBED(request, track=track),
             }
             continue
         url = event_url(event)
@@ -146,7 +152,7 @@ def live_events(request):
             'start': event['time'],
             'end': event['time'] + datetime.timedelta(seconds=event['duration'] * 60),
             'tags': event['talk']['tags'] if event.get('talk') else [],
-            'embed': settings.P3_LIVE_EMBED(request, event=event),
+            'embed': helper_functions.P3_LIVE_EMBED(request, event=event),
             'next': next,
         }
     return output
