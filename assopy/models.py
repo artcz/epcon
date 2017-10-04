@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-from assopy import janrain
 from assopy import settings
 from common import django_urls
 
@@ -133,7 +132,8 @@ user_identity_created = dispatch.Signal(providing_args=['identity'])
 
 class UserManager(models.Manager):
     def create_user(self, email, first_name='', last_name='', password=None, token=False, active=False, assopy_id=None, send_mail=True):
-        uname = janrain.suggest_username_from_email(email)
+        # TODO(artcz) remove janrain completely
+        # uname = janrain.suggest_username_from_email(email)
         duser = auth.models.User.objects.create_user(uname, email, password=password)
         duser.first_name = first_name
         duser.last_name = last_name

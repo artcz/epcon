@@ -20,7 +20,6 @@ from django.views.decorators.csrf import csrf_exempt
 from email_template import utils
 
 from assopy import forms as aforms
-from assopy import janrain
 from assopy import models
 from assopy import settings
 from assopy import utils as autils
@@ -146,6 +145,7 @@ def OTCHandler_J(request, token):
     auth.login(request, duser)
     return redirect('assopy-profile')
 
+
 def otc_code(request, token):
     t = models.Token.objects.retrieve(token)
     if t is None:
@@ -159,139 +159,6 @@ def otc_code(request, token):
 
     return dotted_import(path)(request, t)
 
-def _linkProfileToEmail(email, profile):
-    try:
-        current = autils.get_user_account_from_email(email)
-    except auth.models.User.DoesNotExist:
-        current = auth.models.User.objects.create_user(janrain.suggest_username(profile), email)
-        try:
-            current.first_name = profile['name']['givenName']
-        except KeyError:
-            pass
-        try:
-            current.last_name = profile['name']['familyName']
-        except KeyError:
-            pass
-        current.is_active = True
-        current.save()
-        log.debug('new (active) django user created "%s"', current)
-    else:
-        log.debug('django user found "%s"', current)
-    try:
-        # se current è stato trovato tra gli utenti locali forse esiste
-        # anche la controparte assopy
-        user = current.assopy_user
-    except models.User.DoesNotExist:
-        log.debug('the current user "%s" will become an assopy user', current)
-        user = models.User(user=current)
-        user.save()
-    log.debug('a new identity (for "%s") will be linked to "%s"', profile['identifier'], current)
-    identity = models.UserIdentity.objects.create_from_profile(user, profile)
-    return identity
-
-@csrf_exempt
-def janrain_token(request):
-    if request.method != 'POST':
-        return http.HttpResponseNotAllowed(('POST',))
-    redirect_to = request.session.get('jr_next', reverse('assopy-profile'))
-    try:
-        token = request.POST['token']
-    except KeyError:
-        return http.HttpResponseBadRequest()
-    try:
-        profile = janrain.auth_info(settings.JANRAIN['secret'], token)
-    except Exception, e:
-        log.warn('exception during janrain auth info: "%s"', str(e))
-        return HttpResponseRedirectSeeOther(dsettings.LOGIN_URL)
-
-    log.info('janrain profile from %s: %s', profile['providerName'], profile['identifier'])
-
-    current = request.user
-    duser = auth.authenticate(identifier=profile['identifier'])
-    if duser is None:
-        log.info('%s is a new identity', profile['identifier'])
-        # è la prima volta che questo utente si logga con questo provider
-        if not current.is_anonymous():
-            verifiedEmail = current.email
-        else:
-            # devo creare tutto, utente django, assopy e identità
-            if not 'verifiedEmail' in profile:
-                # argh, il provider scelto non mi fornisce un email sicura; per
-                # evitare il furto di account non posso rendere l'account
-                # attivo.  Devo chiedere all'utente un email valida e inviare a
-                # quella email un link di conferma.
-                log.info('janrain profile without a verified email')
-                request.session['incomplete-profile'] = profile
-                return HttpResponseRedirectSeeOther(reverse('assopy-janrain-incomplete-profile'))
-            else:
-                verifiedEmail = profile['verifiedEmail']
-                log.info('janrain profile with a verified email "%s"', verifiedEmail)
-        identity = _linkProfileToEmail(verifiedEmail, profile)
-        duser = auth.authenticate(identifier=identity.identifier)
-        auth.login(request, duser)
-    else:
-        # è un utente conosciuto, devo solo verificare che lo user associato
-        # all'identità e quello loggato in questo momento siano la stessa
-        # persona
-        if current.is_anonymous():
-            # ok, non devo fare altro che loggarmi con l'utente collegato
-            # all'identità
-            auth.login(request, duser)
-        elif current != duser:
-            # l'utente corrente e quello collegato all'identità non coincidano
-            # devo mostrare un messaggio di errore
-            return HttpResponseRedirectSeeOther(reverse('assopy-janrain-login_mismatch'))
-        else:
-            # non ho niente da fare, l'utente è già loggato
-            pass
-    return HttpResponseRedirectSeeOther(redirect_to)
-
-@render_to_template('assopy/janrain_incomplete_profile.html')
-def janrain_incomplete_profile(request):
-    p = request.session['incomplete-profile']
-    try:
-        name = p['displayName']
-    except KeyError:
-        name = '%s %s' % (p['name'].get('givenName', ''), p['name'].get('familyName', ''))
-    class Form(forms.Form):
-        email = forms.EmailField()
-    if request.method == 'POST':
-        form = Form(data=request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            payload = {
-                'email': email,
-                'profile': p,
-            }
-            token = models.Token.objects.create(ctype='j', payload=json.dumps(payload))
-            current = autils.get_user_account_from_email(email, default=None)
-            utils.email(
-                'janrain-incomplete',
-                ctx={
-                    'name': name,
-                    'provider': p['providerName'],
-                    'token': token,
-                    'current': current,
-                },
-                to=[email]
-            ).send()
-            del request.session['incomplete-profile']
-            return HttpResponseRedirectSeeOther(reverse('assopy-janrain-incomplete-profile-feedback'))
-    else:
-        form = Form()
-    return {
-        'provider': p['providerName'],
-        'name': name,
-        'form': form,
-    }
-
-@render_to_template('assopy/janrain_incomplete_profile_feedback.html')
-def janrain_incomplete_profile_feedback(request):
-    return {}
-
-@render_to_template('assopy/janrain_login_mismatch.html')
-def janrain_login_mismatch(request):
-    return {}
 
 @render_to_template('assopy/checkout.html')
 def checkout(request):

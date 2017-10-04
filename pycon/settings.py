@@ -1229,15 +1229,6 @@ else:
     PAYPAL_TEST = True
 
 #
-# Janrain account
-#
-ASSOPY_JANRAIN = {
-    'domain': '',
-    'app_id': '',
-    'secret': '',
-}
-
-#
 # Sentry account
 #
 RAVEN_CONFIG = {
