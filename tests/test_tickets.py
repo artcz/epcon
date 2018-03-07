@@ -10,33 +10,22 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from django_factory_boy import auth as auth_factories
 from freezegun import freeze_time
 
 from assopy.models import Vat, Order, Country
-from assopy.tests.factories.user import UserFactory as AssopyUserFactory
 from conference.fares import (
     pre_create_typical_fares_for_conference,
     set_early_bird_fare_dates,
     set_regular_fare_dates,
     SOCIAL_EVENT_FARE_CODE
 )
-from conference.models import Conference, Fare, AttendeeProfile, Ticket
+from conference.models import Conference, Fare, Ticket
 from email_template.models import Email
 
-# from tests.common_tools import serve
+from tests.common_tools import make_user
 
 
 DEFAULT_VAT_RATE = "0.2"  # 20%
-
-
-def make_user():
-    user = auth_factories.UserFactory(
-        email='joedoe@example.com', is_active=True
-    )
-    AssopyUserFactory(user=user)
-    AttendeeProfile.objects.create(user=user, slug='foobar')
-    return user
 
 
 def make_basic_fare_setup():
