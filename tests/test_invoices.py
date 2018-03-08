@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 
 from datetime import date, timedelta
 from decimal import Decimal
+import random
 
 from pytest import mark, raises
 
@@ -15,9 +16,8 @@ from freezegun import freeze_time
 import responses
 
 from assopy.models import Country, Invoice, Order, Vat
-from assopy.tests.factories.user import UserFactory as AssopyUserFactory
 from assopy.stripe.tests.factories import FareFactory, OrderFactory
-from conference.models import AttendeeProfile, Ticket
+from assopy.tests.factories.user import UserFactory as AssopyUserFactory
 from conference import settings as conference_settings
 from conference.exchangerates import (
     DAILY_ECB_URL,
@@ -27,11 +27,13 @@ from conference.exchangerates import (
 )
 from conference.fares import (
     SOCIAL_EVENT_FARE_CODE,
-    create_fare_for_conference
+    create_fare_for_conference,
+    pre_create_typical_fares_for_conference,
 )
+from conference.models import AttendeeProfile, Ticket, Fare, Conference
 from email_template.models import Email
 
-from tests.common_tools import template_used, sequence_equals, make_user
+from tests.common_tools import template_used, sequence_equals, make_user, serve
 
 
 def _prepare_invoice_for_basic_test(order_code, invoice_code):
@@ -440,7 +442,6 @@ def test_vat_in_GBP_for_2018(client):
 
         response = client.get(invoice.get_absolute_url())
         content = response.content.decode('utf-8')
-        # serve(response.content)
         assert "Total VAT is GBP 1.49" in content
         # we're going to use whatever the date was received/cached from ECB XML
         # doesnt matter what emit date is
@@ -461,3 +462,41 @@ def test_vat_in_GBP_for_2018(client):
         # not showing any VAT conversion because in 2017 we had just EUR
         assert "Total VAT" not in content
         assert "ECB rate"  not in content
+
+
+@mark.django_db
+@responses.activate
+@freeze_time("2018-05-05")
+def test_create_invoice_with_many_items():
+    """
+    This test is meant to be used to test invoice template design.
+    It creates a lot of different items on the invoice, and after that we can
+    use serve(content) to easily check in the browser how the Invoice looks
+    like.
+
+    Freezing it at 2018 so we can easily check EP2018 invoices.
+    """
+    responses.add(responses.GET, DAILY_ECB_URL, body=EXAMPLE_ECB_DAILY_XML)
+    Conference.objects.get_or_create(code=settings.CONFERENCE_CONFERENCE,
+                                     name="EuroPython 2018")
+
+    Email.objects.create(code='purchase-complete')
+    user = make_user()
+
+    vat_rate_20, _ = Vat.objects.get_or_create(value=20)
+    CONFERENCE = settings.CONFERENCE_CONFERENCE
+
+    pre_create_typical_fares_for_conference(CONFERENCE, vat_rate_20)
+
+    # Don't need to set dates for this test.
+    # set_early_bird_fare_dates(CONFERENCE, yesterday, tomorrow)
+    # set_regular_fare_dates(CONFERENCE, yesterday, tomorrow)
+
+    random_fares = random.sample(Fare.objects.all(), 1)
+
+    order = OrderFactory(user=user.assopy_user, items=[
+        (fare, {'qty': i}) for i, fare in enumerate(random_fares, 1)
+    ])
+    order.confirm_order(date.today())
+    invoice = Invoice.objects.get()
+    serve(invoice.invoice_copy_full_html.encode('utf-8'))

@@ -20,6 +20,7 @@ fake = Faker()
 Iterator = functools.partial(factory.Iterator, getter=lambda x: x[0])
 
 
+# NOTE(artcz) there's another FareFactory in assopy/stripe/tests/factories.py
 class FareFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'conference.Fare'

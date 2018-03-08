@@ -713,6 +713,9 @@ class OrderItem(models.Model):
     # o venire copiato da conference
     vat = models.ForeignKey(Vat)
 
+    def net_price(self):
+        return normalize_price(self.price / (1 + self.vat.value / 100))
+
     def invoice(self):
         """
         Ritorna, se esiste, la fattura collegata all'order_item
@@ -788,21 +791,21 @@ class Invoice(models.Model):
                                  null=True, blank=True)
     emit_date = models.DateField()
     payment_date = models.DateField(null=True, blank=True)
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=16, decimal_places=2)
 
     issuer = models.TextField()
     invoice_copy_full_html = models.TextField()
 
     local_currency = models.CharField(max_length=3, default="EUR")
     vat_in_local_currency = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+        max_digits=30,
+        decimal_places=20,
         # remove after testing
         default=Decimal("0"),
     )
     exchange_rate = models.DecimalField(
-        max_digits=10,
-        decimal_places=5,
+        max_digits=20,
+        decimal_places=10,
         # remove after testing
         default=Decimal("1"),
     )

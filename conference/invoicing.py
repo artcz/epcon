@@ -30,7 +30,16 @@ from conference.exchangerates import (
 ISSUER_BY_YEAR = {
     2016: "Bilbao FIXME",
     2017: "Rimini FIXME",
-    2018: "Edinburgh FIXME",
+    2018: """
+EuroPython Society
+c/o Open End AB
+Norra Ågatan 10
+41664  Göteborg
+Sweden
+EU VAT-ID: SE802417770401
+someemail@europython-society.org
+https://www.europython-society.org/
+    """.strip()
 }
 
 LOCAL_CURRENCY_BY_YEAR = {
@@ -161,6 +170,12 @@ def create_invoices_for_order(order, emit_date, payment_date=None):
 def render_invoice_as_html(invoice):
     assert isinstance(invoice, Invoice)
 
+    items = invoice.invoice_items()
+    for item in items:
+        item['net_price'] = normalize_price(
+            item['price'] / (1 + invoice.vat.value / 100)
+        )
+
     # TODO this is copied as-is from assopy/views.py, but can be simplified
     # TODO: also if there are any images included in the invoice make sure to
     # base64 them.
@@ -181,7 +196,7 @@ def render_invoice_as_html(invoice):
             'cf_code': order.cf_code,
             'vat_number': order.vat_number,
         },
-        'items': invoice.invoice_items(),
+        'items': items,
         'note': invoice.note,
         'price': {
             'net': invoice.net_price(),
