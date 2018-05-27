@@ -145,9 +145,7 @@ class NewAccountForm(forms.Form):
                                 widget=forms.PasswordInput)
 
     # Keep this in sync with LoginForm.i_accept_privacy_policy
-    i_accept_privacy_policy = forms.BooleanField(
-        label=PRIVACY_POLICY_CHECKBOX
-    )
+    i_accept_privacy_policy = forms.BooleanField(PRIVACY_POLICY_CHECKBOX)
 
     def clean_email(self):
         email = self.cleaned_data['email']

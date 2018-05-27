@@ -307,16 +307,27 @@ class UserOAuthInfo(models.Model):
     def __unicode__(self):
         return u'{0} token for {1}'.format(self.service, self.user)
 
+
 class Coupon(models.Model):
     conference = models.ForeignKey('conference.Conference')
     code = models.CharField(max_length=10)
     start_validity = models.DateField(null=True, blank=True)
     end_validity = models.DateField(null=True, blank=True)
-    max_usage = models.PositiveIntegerField(default=0, help_text='numero di volte che questo coupon può essere usato')
-    items_per_usage = models.PositiveIntegerField(default=0, help_text='numero di righe d\'ordine su cui questo coupon ha effetto')
+    max_usage = models.PositiveIntegerField(
+        default=0,
+        help_text="How many times this coupon can be used (No. of Orders)"
+    )
+    items_per_usage = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of order items per Order this coupon can effect"
+    )
     description = models.CharField(max_length=100, blank=True)
-    value = models.CharField(max_length=8, help_text='importo, eg: 10, 15%, 8.5')
+    value = models.CharField(
+        max_length=8,
+        help_text="amount, eg: 10, 15%, 8.5; (absolute in EUR or percentage)"
+    )
 
+    # Coupons can optionally be created for specific users(?)
     user = models.ForeignKey(User, null=True, blank=True)
     fares = models.ManyToManyField('conference.Fare', blank=True)
 
@@ -325,7 +336,9 @@ class Coupon(models.Model):
 
     def clean(self):
         if re.search(r'[^\d\%\.]+', self.value):
-            raise ValidationError('The value of the coupon contains illegal characters')
+            raise ValidationError(
+                'The value of the coupon contains illegal characters'
+            )
 
     def type(self):
         if self.value.endswith('%'):
